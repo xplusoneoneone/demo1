@@ -1,0 +1,87 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "首页"
+			}
+		},
+		{
+			"path": "pages/index/Page1",
+			"style": {
+				"navigationBarTitleText": "页面1"
+			}
+		},
+		{
+			"path": "pages/index/Page2",
+			"style": {
+				"navigationBarTitleText": "页面2"
+			}
+		},
+		{
+			"path": "pages/index/User",
+			"style": {
+				"navigationBarTitleText": "个人信息"
+			}
+		},
+		{
+			"path": "pages/login/EmailLogin",
+			"style": {
+				"navigationBarTitleText": "邮箱登录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/ai-chat/ai-chat",
+			"style": {
+				"navigationBarTitleText": "AI智能助手",
+				"navigationStyle": "custom"
+			}
+		}
+	],
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#3cc51f",
+		"backgroundColor": "#ffffff",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "首页",
+				"iconPath": "static/tabbar/home.png",
+				"selectedIconPath": "static/tabbar/home_selected.png"
+			},
+			{
+				"pagePath": "pages/index/Page1",
+				"text": "页面1",
+				"iconPath": "static/tabbar/page1.png",
+				"selectedIconPath": "static/tabbar/page1_selected.png"
+			},
+			{
+				"pagePath": "pages/index/Page2",
+				"text": "页面2",
+				"iconPath": "static/tabbar/page2.png",
+				"selectedIconPath": "static/tabbar/page2_selected.png"
+			},
+			{
+				"pagePath": "pages/index/User",
+				"text": "个人信息",
+				"iconPath": "static/tabbar/user.png",
+				"selectedIconPath": "static/tabbar/user_selected.png"
+			}
+		]
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"uniIdRouter": {},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^ai-assistant$": "@/components/AiAssistant/AiAssistant.vue"
+		}
+	}
+}

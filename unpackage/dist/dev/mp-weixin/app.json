@@ -1,0 +1,59 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/index/Page1",
+    "pages/index/Page2",
+    "pages/index/User",
+    "pages/login/EmailLogin",
+    "pages/ai-chat/ai-chat"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uni-app",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#3cc51f",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home_selected.png"
+      },
+      {
+        "pagePath": "pages/index/Page1",
+        "text": "页面1",
+        "iconPath": "static/tabbar/page1.png",
+        "selectedIconPath": "static/tabbar/page1_selected.png"
+      },
+      {
+        "pagePath": "pages/index/Page2",
+        "text": "页面2",
+        "iconPath": "static/tabbar/page2.png",
+        "selectedIconPath": "static/tabbar/page2_selected.png"
+      },
+      {
+        "pagePath": "pages/index/User",
+        "text": "个人信息",
+        "iconPath": "static/tabbar/user.png",
+        "selectedIconPath": "static/tabbar/user_selected.png"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于小程序位置接口的效果展示"
+    }
+  },
+  "requiredBackgroundModes": [],
+  "plugins": {},
+  "resizable": true,
+  "navigateToMiniProgramAppIdList": [],
+  "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {}
+}
