@@ -1,4 +1,6 @@
 <template>
+	<AiAssistant />
+
 	<view class="content">
 		<!-- 轮播图部分 -->
 		<swiper class="banner-swiper" indicator-dots="true" autoplay="true" interval="3000" duration="1000" circular="true">
@@ -40,6 +42,7 @@
 </template>
 
 <script>
+
 	export default {
 		data() {
 			return {

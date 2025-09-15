@@ -80,7 +80,10 @@ const request = (options) => {
     // 根据请求方法设置数据
     if (options.method === 'GET' && options.params) {
       // GET请求的参数需要拼接到URL上
-      const params = new URLSearchParams(options.params).toString();
+      const paramPairs = Object.keys(options.params).map(key => 
+        `${encodeURIComponent(key)}=${encodeURIComponent(options.params[key])}`
+      );
+      const params = paramPairs.join('&');
       requestOptions.url += (url.includes('?') ? '&' : '?') + params;
     } else if (options.data && (options.method === 'POST' || options.method === 'PUT' || options.method === 'DELETE')) {
       // POST/PUT/DELETE请求的数据放在data中

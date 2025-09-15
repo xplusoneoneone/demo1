@@ -128,6 +128,14 @@ const _sfc_main = {
     }
   }
 };
+if (!Array) {
+  const _easycom_AiAssistant2 = common_vendor.resolveComponent("AiAssistant");
+  _easycom_AiAssistant2();
+}
+const _easycom_AiAssistant = () => "../../components/AiAssistant/AiAssistant.js";
+if (!Math) {
+  _easycom_AiAssistant();
+}
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: common_vendor.f($data.bannerList, (item, index, i0) => {

@@ -1,7 +1,14 @@
+
+
+<template>
+	<view id="app">
+	</view>
+</template>
+
 <script>
 import { userApi } from '@/api/user.js'
-
 export default {
+	name: 'app',
 	globalData: {
 		// 全局用户信息
 		userInfo: null,
@@ -132,15 +139,6 @@ export default {
 	}
 }
 </script>
-
-<template>
-	<view id="app">
-	
-		<AiAssistant />
-		
-		</view>
-</template>
-
 <style>
 	#app {
 		position: relative;

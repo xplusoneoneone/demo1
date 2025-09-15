@@ -255,7 +255,7 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_assets._imports_0$2,
+    a: common_assets._imports_0$1,
     b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
     c: common_vendor.o([($event) => $data.email = $event.detail.value, (...args) => $options.onEmailInput && $options.onEmailInput(...args)]),
     d: common_vendor.o((...args) => $options.validateEmail && $options.validateEmail(...args)),

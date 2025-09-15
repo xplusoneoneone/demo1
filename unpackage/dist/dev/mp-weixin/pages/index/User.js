@@ -282,7 +282,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: $data.isLogin
   }, $data.isLogin ? {
-    b: common_assets._imports_0$1,
+    b: common_assets._imports_0,
     c: common_vendor.o((...args) => $options.logout && $options.logout(...args))
   } : {}, {
     d: $data.userInfo.avatar,

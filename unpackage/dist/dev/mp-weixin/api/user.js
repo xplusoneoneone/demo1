@@ -44,7 +44,10 @@ const request = (options) => {
       }
     };
     if (options.method === "GET" && options.params) {
-      const params = new URLSearchParams(options.params).toString();
+      const paramPairs = Object.keys(options.params).map(
+        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(options.params[key])}`
+      );
+      const params = paramPairs.join("&");
       requestOptions.url += (url.includes("?") ? "&" : "?") + params;
     } else if (options.data && (options.method === "POST" || options.method === "PUT" || options.method === "DELETE")) {
       requestOptions.data = options.data;

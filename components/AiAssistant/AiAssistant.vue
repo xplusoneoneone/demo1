@@ -42,9 +42,9 @@ export default {
   methods: {
     initPosition() {
       // 获取屏幕尺寸
-      const systemInfo = uni.getSystemInfoSync()
-      const screenWidth = systemInfo.windowWidth
-      const screenHeight = systemInfo.windowHeight
+      const windowInfo = uni.getWindowInfo()
+      const screenWidth = windowInfo.windowWidth
+      const screenHeight = windowInfo.windowHeight
       
       // 从本地存储获取保存的位置，如果没有则使用默认位置
       const savedPosition = uni.getStorageSync('aiAssistantPosition')
@@ -63,15 +63,26 @@ export default {
     },
     
     constrainPosition() {
-      const systemInfo = uni.getSystemInfoSync()
-      const screenWidth = systemInfo.windowWidth
-      const screenHeight = systemInfo.windowHeight
-      
-      this.position.x = Math.max(0, Math.min(this.position.x, screenWidth - 80))
-      this.position.y = Math.max(0, Math.min(this.position.y, screenHeight - 80))
+      // 使用 uni.createSelectorQuery() 获取组件的实际尺寸
+      const query = uni.createSelectorQuery().in(this)
+      query.select('.ai-assistant').boundingClientRect((rect) => {
+        if (rect) {
+          const windowInfo = uni.getWindowInfo()
+          const screenWidth = windowInfo.windowWidth
+          const screenHeight = windowInfo.windowHeight
+          
+          // 使用实际获取的组件尺寸进行边界计算
+          this.position.x = Math.max(0, Math.min(this.position.x, screenWidth - rect.width))
+          this.position.y = Math.max(0, Math.min(this.position.y, screenHeight - rect.height))
+        }
+      }).exec()
     },
     
     handleTouchStart(e) {
+      // 阻止事件冒泡，防止影响页面滚动
+      e.stopPropagation()
+      e.preventDefault()
+      
       this.isDragging = true
       this.startPosition = { ...this.position }
       this.startTouch = {
@@ -89,6 +100,10 @@ export default {
     handleTouchMove(e) {
       if (!this.isDragging) return
       
+      // 阻止事件冒泡，防止影响页面滚动
+      e.stopPropagation()
+      e.preventDefault()
+      
       const deltaX = e.touches[0].clientX - this.startTouch.x
       const deltaY = e.touches[0].clientY - this.startTouch.y
       
@@ -98,8 +113,12 @@ export default {
       this.constrainPosition()
     },
     
-    handleTouchEnd() {
+    handleTouchEnd(e) {
       if (this.isDragging) {
+        // 阻止事件冒泡
+        e.stopPropagation()
+        e.preventDefault()
+        
         this.isDragging = false
         // 保存位置到本地存储
         uni.setStorageSync('aiAssistantPosition', this.position)
@@ -136,6 +155,8 @@ export default {
   height: 80rpx;
   z-index: 9999;
   pointer-events: auto;
+  touch-action: none; /* 防止默认的触摸行为 */
+  user-select: none; /* 防止文本选择 */
 }
 
 .ai-icon {

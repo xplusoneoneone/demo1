@@ -23,7 +23,7 @@
 				<view class="message-item" v-for="(message, index) in messageList" :key="index" :class="message.type">
 					<view class="message-avatar">
 						<image v-if="message.type === 'user'" class="avatar-img" :src="userAvatar" mode="aspectFill"></image>
-						<image v-else class="avatar-img ai-avatar" src="/static/小程序 AI 助手制作.png" mode="aspectFill"></image>
+						<image v-else class="avatar-img ai-avatar" src="/static/ai-assistant/ai-robot.png" mode="aspectFill"></image>
 					</view>
 					<view class="message-content">
 						<view class="message-bubble" :class="message.type">
@@ -51,6 +51,26 @@
 			</view>
 		</scroll-view>
 		
+		<!-- 未登录提示弹窗 -->
+		<view class="login-modal" v-if="showLoginModal" @click="hideLoginModal">
+			<view class="modal-content" @click.stop>
+				<view class="modal-header">
+					<text class="modal-title">需要登录</text>
+					<view class="close-btn" @click="hideLoginModal">
+						<text class="close-icon">×</text>
+					</view>
+				</view>
+				<view class="modal-body">
+					<text class="modal-text">使用AI智能助手功能需要先登录账号</text>
+					<text class="modal-subtitle">登录后即可享受完整的AI对话体验</text>
+				</view>
+				<view class="modal-footer">
+					<button class="cancel-btn" @click="hideLoginModal">稍后再说</button>
+					<button class="login-btn" @click="goToLogin">立即登录</button>
+				</view>
+			</view>
+		</view>
+		
 		<!-- 输入区域 -->
 		<view class="input-area">
 			<view class="input-container">
@@ -76,6 +96,8 @@
 </template>
 
 <script>
+import aiApi from '@/api/ai.js'
+
 export default {
 	data() {
 		return {
@@ -90,7 +112,9 @@ export default {
 			scrollTop: 0,
 			isAiTyping: false,
 			aiStatus: 'online',
-			userAvatar: '/static/avator.png'
+			userAvatar: '/static/avator.png',
+			showLoginModal: false,
+			isLoggedIn: false
 		}
 	},
 	
@@ -105,6 +129,16 @@ export default {
 		}
 	},
 	
+	onLoad() {
+		// 检查登录状态
+		this.checkLoginStatus()
+	},
+	
+	onShow() {
+		// 每次显示页面时重新检查登录状态
+		this.checkLoginStatus()
+	},
+	
 	methods: {
 		// 返回上一页
 		goBack() {
@@ -117,6 +151,12 @@ export default {
 		sendMessage() {
 			if (!this.inputMessage.trim() || this.isAiTyping) return;
 			
+			// 检查登录状态
+			if (!this.isLoggedIn) {
+				this.showLoginModal = true;
+				return;
+			}
+			
 			const userMessage = {
 				type: 'user',
 				content: this.inputMessage.trim(),
@@ -127,57 +167,58 @@ export default {
 			this.inputMessage = '';
 			this.scrollToBottom();
 			
-			// 模拟AI回复
-			this.simulateAiResponse(userMessage.content);
+			// 调用AI API
+			this.callAiApi(userMessage.content);
 		},
 		
-		// 模拟AI回复
-		simulateAiResponse(userInput) {
+		// 调用AI API
+		async callAiApi(userInput) {
 			this.isAiTyping = true;
 			this.aiStatus = 'typing';
 			
-			// 模拟网络延迟
-			setTimeout(() => {
-				const aiResponse = this.generateAiResponse(userInput);
+			try {
+				// 使用封装的AI API
+				const result = await aiApi.sendMessage(userInput);
+				
+				if (result.success) {
+					// 添加AI回复到消息列表
+					const aiMessage = {
+						type: 'ai',
+						content: result.message,
+						time: this.getCurrentTime()
+					};
+					
+					this.messageList.push(aiMessage);
+					this.aiStatus = 'online';
+				} else {
+					// API返回失败
+					const aiMessage = {
+						type: 'ai',
+						content: result.message || '抱歉，服务暂时不可用，请稍后再试。',
+						time: this.getCurrentTime()
+					};
+					
+					this.messageList.push(aiMessage);
+					this.aiStatus = 'offline';
+				}
+			} catch (error) {
+				console.error('AI API请求失败:', error);
+				
+				// 请求异常时的处理
 				const aiMessage = {
 					type: 'ai',
-					content: aiResponse,
+					content: '抱歉，网络连接出现问题，请检查网络后重试。',
 					time: this.getCurrentTime()
 				};
 				
 				this.messageList.push(aiMessage);
+				this.aiStatus = 'offline';
+			} finally {
 				this.isAiTyping = false;
-				this.aiStatus = 'online';
 				this.scrollToBottom();
-			}, 1500 + Math.random() * 1000);
-		},
-		
-		// 生成AI回复
-		generateAiResponse(input) {
-			const responses = [
-				'这是一个很有趣的问题！让我来为您详细解答。',
-				'我理解您的需求，根据我的分析，建议您可以考虑以下几个方面...',
-				'感谢您的提问！这个问题涉及到多个方面，我来为您逐一分析。',
-				'您提到的这个观点很有见地，我完全同意您的看法。',
-				'这是一个很好的问题！让我从专业角度为您分析一下。',
-				'根据您提供的信息，我认为最佳的解决方案是...',
-				'您的问题很有代表性，很多用户都遇到过类似情况。',
-				'让我为您提供一个详细的解决方案，希望对您有帮助。'
-			];
-			
-			// 根据关键词返回特定回复
-			if (input.includes('你好') || input.includes('您好')) {
-				return '您好！很高兴与您交流，有什么可以帮助您的吗？';
-			} else if (input.includes('帮助') || input.includes('问题')) {
-				return '我很乐意为您提供帮助！请详细描述您遇到的问题，我会尽力为您解答。';
-			} else if (input.includes('功能') || input.includes('使用')) {
-				return '我可以帮助您解答各种问题，包括技术咨询、生活建议、学习指导等。您有什么具体需求吗？';
-			} else if (input.includes('谢谢') || input.includes('感谢')) {
-				return '不客气！能帮助到您我很开心。如果还有其他问题，随时可以问我哦！';
-			} else {
-				return responses[Math.floor(Math.random() * responses.length)];
 			}
 		},
+		
 		
 		// 滚动到底部
 		scrollToBottom() {
@@ -192,6 +233,42 @@ export default {
 			const hours = now.getHours().toString().padStart(2, '0');
 			const minutes = now.getMinutes().toString().padStart(2, '0');
 			return `${hours}:${minutes}`;
+		},
+		
+		// 检查登录状态
+		checkLoginStatus() {
+			const app = getApp();
+			this.isLoggedIn = app.globalData.isLogin;
+			
+			// 如果未登录，更新AI的欢迎消息
+			if (!this.isLoggedIn && this.messageList.length === 1) {
+				this.messageList[0] = {
+					type: 'ai',
+					content: '您好！我是AI智能助手，很高兴为您服务！请先登录账号以使用完整功能。',
+					time: this.getCurrentTime()
+				};
+			}
+		},
+		
+		// 隐藏登录弹窗
+		hideLoginModal() {
+			this.showLoginModal = false;
+		},
+		
+		// 跳转到登录页面
+		goToLogin() {
+			this.hideLoginModal();
+			const currentPage = '/pages/ai-chat/ai-chat';
+			uni.navigateTo({
+				url: `/pages/login/EmailLogin?redirect=${encodeURIComponent(currentPage)}`,
+				fail: (error) => {
+					console.error('跳转登录页面失败:', error);
+					uni.showToast({
+						title: '跳转失败',
+						icon: 'none'
+					});
+				}
+			});
 		}
 	}
 }
@@ -273,7 +350,10 @@ export default {
 /* 聊天内容区域 */
 .chat-content {
 	flex: 1;
-	padding: 20rpx;
+	padding-top: 20rpx;
+	padding-bottom: 20rpx;
+	padding-left: 0rpx;
+	padding-right: 0rpx;
 }
 
 .message-list {
@@ -294,6 +374,7 @@ export default {
 .message-avatar {
 	width: 80rpx;
 	height: 80rpx;
+	margin: 15rpx;
 	flex-shrink: 0;
 }
 
@@ -435,5 +516,131 @@ export default {
 
 .send-btn:not(.disabled):active {
 	transform: scale(0.95);
+}
+
+/* 登录弹窗样式 */
+.login-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10000;
+}
+
+.modal-content {
+	background-color: #ffffff;
+	border-radius: 20rpx;
+	width: 600rpx;
+	max-width: 90%;
+	overflow: hidden;
+	animation: modalShow 0.3s ease-out;
+}
+
+@keyframes modalShow {
+	from {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 40rpx 40rpx 20rpx;
+	border-bottom: 1rpx solid #f0f0f0;
+}
+
+.modal-title {
+	font-size: 36rpx;
+	font-weight: bold;
+	color: #333;
+}
+
+.close-btn {
+	width: 60rpx;
+	height: 60rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background-color: #f5f5f5;
+}
+
+.close-icon {
+	font-size: 40rpx;
+	color: #999;
+	line-height: 1;
+}
+
+.modal-body {
+	padding: 40rpx;
+	height: 80%;
+	text-align: center;
+}
+
+.login-icon {
+	width: 120rpx;
+	height: 120rpx;
+	margin-bottom: 30rpx;
+}
+
+.modal-text {
+	display: block;
+	font-size: 32rpx;
+	color: #333;
+	margin-bottom: 20rpx;
+	line-height: 1.5;
+}
+
+.modal-subtitle {
+	display: block;
+	font-size: 28rpx;
+	color: #666;
+	line-height: 1.4;
+}
+
+.modal-footer {
+	display: flex;
+	gap: 20rpx;
+	padding: 20rpx 40rpx 40rpx;
+}
+
+.cancel-btn {
+	flex: 1;
+	background-color: #f5f5f5;
+	color: #666;
+	font-size: 28rpx;
+	padding: 24rpx;
+	border-radius: 12rpx;
+	border: none;
+}
+
+.login-btn {
+	flex: 1;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: #ffffff;
+	font-size: 28rpx;
+	font-weight: bold;
+	padding: 24rpx;
+	border-radius: 12rpx;
+	border: none;
+}
+
+.cancel-btn:active {
+	background-color: #e8e8e8;
+}
+
+.login-btn:active {
+	transform: scale(0.98);
 }
 </style>

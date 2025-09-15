@@ -1,0 +1,105 @@
+
+.ai-assistant.data-v-30ad0b5f {
+  position: fixed;
+  width: 80rpx;
+  height: 80rpx;
+  z-index: 9999;
+  pointer-events: auto;
+  touch-action: none; /* 防止默认的触摸行为 */
+  -webkit-user-select: none;
+          user-select: none; /* 防止文本选择 */
+}
+.ai-icon.data-v-30ad0b5f {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+.ai-icon.data-v-30ad0b5f::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: rotate(45deg);
+  animation: shine-30ad0b5f 3s infinite;
+}
+.ai-icon.breathing.data-v-30ad0b5f {
+  animation: breathing-30ad0b5f 2s ease-in-out infinite;
+}
+.icon-image.data-v-30ad0b5f {
+  width: 50rpx;
+  height: 50rpx;
+  z-index: 1;
+}
+.click-hint.data-v-30ad0b5f {
+  position: absolute;
+  top: -60rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.click-hint.show.data-v-30ad0b5f {
+  opacity: 1;
+}
+.click-hint.data-v-30ad0b5f::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border: 8rpx solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+}
+@keyframes breathing-30ad0b5f {
+0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.4);
+}
+50% {
+    transform: scale(1.05);
+    box-shadow: 0 12rpx 32rpx rgba(102, 126, 234, 0.6);
+}
+}
+@keyframes shine-30ad0b5f {
+0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+}
+100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+}
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 750rpx) {
+.ai-assistant.data-v-30ad0b5f {
+    width: 60rpx;
+    height: 60rpx;
+}
+.icon-image.data-v-30ad0b5f {
+    width: 40rpx;
+    height: 40rpx;
+}
+.click-hint.data-v-30ad0b5f {
+    font-size: 20rpx;
+    padding: 6rpx 12rpx;
+}
+}
