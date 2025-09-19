@@ -1,0 +1,250 @@
+
+.edit-profile-page.data-v-769b8cad {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* 页面头部 */
+.page-header.data-v-769b8cad {
+  padding: 60rpx 40rpx 30rpx 20rpx;
+  padding-top:60px;
+  padding-bottom: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  top: 0;
+  z-index: 100;
+}
+.header-left.data-v-769b8cad{
+  position: absolute;
+  left: 50rpx;
+  width: 120rpx;
+  display: flex;
+  align-items: center;
+}
+.header-right.data-v-769b8cad {
+  justify-content: flex-end;
+}
+.back-icon.data-v-769b8cad {
+  width: 20px;
+  height: 20px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.save-text.data-v-769b8cad {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+.header-title.data-v-769b8cad {
+  font-size: 36rpx;
+  text-align: center;
+  color:black;
+  font-weight: bold;
+}
+
+/* 表单容器 */
+.form-container.data-v-769b8cad {
+  padding: 40rpx;
+}
+.form-section.data-v-769b8cad {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+.section-title.data-v-769b8cad {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 30rpx;
+}
+
+/* 头像编辑 */
+.avatar-section.data-v-769b8cad {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  flex: 1;
+}
+.profile-avatar.data-v-769b8cad {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  border: 2rpx solid #e0e0e0;
+}
+.avatar-overlay.data-v-769b8cad {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24rpx;
+  height: 24rpx;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatar-text.data-v-769b8cad {
+  color: white;
+  font-size: 16rpx;
+  text-align: center;
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* 表单项 */
+.form-item.data-v-769b8cad {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.item-label.data-v-769b8cad {
+  width: 160rpx;
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.item-input.data-v-769b8cad {
+  flex: 1;
+  height: 60rpx;
+  background-color: #f8f8f8;
+  border-radius: 12rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  border: 2rpx solid transparent;
+  transition: all 0.3s ease;
+}
+.item-input.data-v-769b8cad:focus {
+  border-color: #667eea;
+  background-color: white;
+}
+.item-textarea.data-v-769b8cad {
+  flex: 1;
+  min-height: 120rpx;
+  background-color: #f8f8f8;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  border: 2rpx solid transparent;
+  transition: all 0.3s ease;
+  line-height: 1.5;
+}
+.item-textarea.data-v-769b8cad:focus {
+  border-color: #667eea;
+  background-color: white;
+}
+
+/* 性别选择器 */
+.gender-selector.data-v-769b8cad {
+  display: flex;
+  gap: 20rpx;
+  flex: 1;
+}
+.gender-option.data-v-769b8cad {
+  flex: 1;
+  height: 60rpx;
+  background-color: #f8f8f8;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid transparent;
+  transition: all 0.3s ease;
+}
+.arrow-icon.data-v-769b8cad{
+  width: 15px;
+  height: 15px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.gender-option.active.data-v-769b8cad {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+.gender-text.data-v-769b8cad {
+  font-size: 28rpx;
+  color: #333;
+}
+.gender-option.active .gender-text.data-v-769b8cad {
+  color: white;
+}
+
+/* 日期选择器 */
+.date-picker.data-v-769b8cad {
+  flex: 1;
+  height: 60rpx;
+  background-color: #f8f8f8;
+  border-radius: 12rpx;
+  padding: 0 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 2rpx solid transparent;
+  transition: all 0.3s ease;
+}
+.date-picker.data-v-769b8cad:active {
+  border-color: #667eea;
+  background-color: white;
+}
+.date-text.data-v-769b8cad {
+  font-size: 28rpx;
+  color: #333;
+}
+.date-text.placeholder.data-v-769b8cad {
+  color: #999;
+}
+.picker-icon.data-v-769b8cad {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 底部操作按钮 */
+.bottom-actions.data-v-769b8cad {
+  padding: 40rpx;
+  display: flex;
+  gap: 20rpx;
+  position: -webkit-sticky;
+  position: sticky;
+  bottom: 0;
+  background-color: #f5f5f5;
+}
+.action-button.data-v-769b8cad {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+.cancel-button.data-v-769b8cad {
+  background-color: white;
+  border: 2rpx solid #e0e0e0;
+}
+.cancel-button.data-v-769b8cad:active {
+  background-color: #f0f0f0;
+}
+.save-button.data-v-769b8cad {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+.save-button.data-v-769b8cad:active {
+  transform: scale(0.98);
+}
+.button-text.data-v-769b8cad {
+  font-size: 28rpx;
+  font-weight: bold;
+}
+.cancel-button .button-text.data-v-769b8cad {
+  color: #666;
+}
+.save-button .button-text.data-v-769b8cad {
+  color: white;
+}

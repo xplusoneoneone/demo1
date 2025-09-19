@@ -151,7 +151,7 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_assets._imports_0$1,
+    a: common_assets._imports_0$2,
     b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
     c: common_vendor.t($options.statusText),
     d: common_vendor.n($data.aiStatus),
@@ -161,7 +161,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       }, message.type === "user" ? {
         b: $data.userAvatar
       } : {
-        c: common_assets._imports_1
+        c: common_assets._imports_1$1
       }, {
         d: common_vendor.t(message.content),
         e: common_vendor.n(message.type),
@@ -172,7 +172,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     f: $data.isAiTyping
   }, $data.isAiTyping ? {
-    g: common_assets._imports_2
+    g: common_assets._imports_2$1
   } : {}, {
     h: $data.scrollTop,
     i: $data.showLoginModal

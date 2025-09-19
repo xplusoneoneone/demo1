@@ -2,7 +2,7 @@
  * @Author: 徐佳德 1404577549@qq.com
  * @Date: 2025-08-23 15:50:32
  * @LastEditors: 徐佳德 1404577549@qq.com
- * @LastEditTime: 2025-09-13 19:37:31
+ * @LastEditTime: 2025-09-19 09:27:32
  * @FilePath: \demo1\api\user.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -97,20 +97,21 @@ const request = (options) => {
 
 // 用户信息默认值配置
 const DEFAULT_USER_INFO = {
-  nickname: '未设置昵称',
-  account: '',
+  nickname: '淬月',
+  username: '',
   avatar: '/static/avator.png',
-  gender: 'unknown',
+  sex: 'unknown',
   birthday: '',
   phone: '',
   email: '',
-  bio: '这个人很懒，什么都没写~',
-  level: 1,
-  points: 0,
-  vipLevel: 0,
-  isVip: false,
-  registerTime: '',
-  lastLoginTime: '',
+  signature: '',
+  realName: '',
+  age: '',
+  name: '',
+  idCartNumber: '',
+  idCartType: '',
+  userType: '',
+  createTime: null,
   status: 'active'
 };
 
@@ -125,6 +126,8 @@ const validateAndSetDefaults = (userData) => {
         validatedData[key] = userData[key];
       }
     });
+    console.log(validatedData);
+    
   }
   
   return validatedData;
@@ -185,10 +188,29 @@ export const userApi = {
     return request({
       url,
       method: 'GET'
-    }).then(result => {
+    }).then(async result => {
       // 对返回的用户信息进行验证和默认值设置
       if (result.code === 200 && result.data) {
         result.data = validateAndSetDefaults(result.data);
+        
+        // 同时获取用户签名和头像
+        try {
+          const [signatureResult, avatarResult] = await Promise.all([
+            this.getSignature(),
+            this.getAvatar()
+          ]);
+          
+          if (signatureResult.code === 200 && signatureResult.data) {
+            result.data.signature = signatureResult.data;
+          }
+          
+          if (avatarResult.code === 200 && avatarResult.data) {
+            result.data.avatar = avatarResult.data;
+          }
+        } catch (error) {
+          console.log('获取用户签名或头像失败:', error);
+          // 签名或头像获取失败不影响主要用户信息获取
+        }
       }
       return result;
     });
@@ -197,37 +219,107 @@ export const userApi = {
   /**
    * 更新用户信息
    * @param {Object} userData - 用户信息数据
+   * @param {string} userData.username - 用户名
    * @param {string} userData.nickname - 昵称
-   * @param {string} userData.gender - 性别
+   * @param {string} userData.sex - 性别
    * @param {string} userData.birthday - 生日
    * @param {string} userData.phone - 手机号
    * @param {string} userData.email - 邮箱
-   * @param {string} userData.bio - 个人简介
+   * @param {string} userData.signature - 个人签名
+   * @param {string} userData.avatar - 头像
    * @returns {Promise}
    */
   updateUserInfo(userData) {
-    // 验证和过滤用户数据
-    const validatedData = {};
-    const allowedFields = ['nickname', 'gender', 'birthday', 'phone', 'email', 'bio'];
-    
-    allowedFields.forEach(field => {
-      if (userData[field] !== undefined && userData[field] !== null && userData[field] !== '') {
-        validatedData[field] = userData[field];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const promises = [];
+        
+        // 处理签名修改
+        if (userData.signature !== undefined && userData.signature !== null && userData.signature !== '') {
+          promises.push(this.updateSignature(userData.signature));
+        }
+        
+        // 处理头像修改
+        if (userData.avatar !== undefined && userData.avatar !== null && userData.avatar !== '') {
+          promises.push(this.updateAvatar(userData.avatar));
+        }
+        
+        // 处理其他用户信息
+        const otherFields = ['username', 'nickname', 'sex', 'birthday', 'phone', 'email', 'realName', 'age', 'name', 'idCartNumber', 'idCartType', 'userType'];
+        const otherData = {};
+        
+        otherFields.forEach(field => {
+          if (userData[field] !== undefined && userData[field] !== null && userData[field] !== '') {
+            otherData[field] = userData[field];
+          }
+        });
+        
+        if (Object.keys(otherData).length > 0) {
+          promises.push(request({
+            url: '/user/user/modifyUserInfo',
+            method: 'POST',
+            data: otherData
+          }));
+        }
+        
+        // 如果没有需要更新的数据
+        if (promises.length === 0) {
+          return reject(new Error('没有有效的用户信息需要更新'));
+        }
+        
+        // 等待所有请求完成
+        const results = await Promise.all(promises);
+        
+        // 检查所有请求是否都成功
+        const allSuccess = results.every(result => result && result.code === 200);
+        
+        if (allSuccess) {
+          resolve({
+            code: 200,
+            message: '更新成功',
+            data: results
+          });
+        } else {
+          // 如果有失败的请求，返回错误信息
+          const failedResult = results.find(result => !result || result.code !== 200);
+          resolve({
+            code: failedResult ? failedResult.code : 500,
+            message: failedResult ? failedResult.message : '部分更新失败',
+            data: results
+          });
+        }
+        
+      } catch (error) {
+        reject(error);
       }
-    });
-    
-    // 如果没有有效数据，返回错误
-    if (Object.keys(validatedData).length === 0) {
-      return Promise.reject(new Error('没有有效的用户信息需要更新'));
-    }
-    
-    return request({
-      url: '/user/update',
-      method: 'PUT',
-      data: validatedData
     });
   },
 
+  /**
+   * 更新用户签名
+   * @param {string} signature - 新的签名
+   * @returns {Promise}
+   */
+  updateSignature(signature) {
+    return request({
+      url: `/user/user/modifySignature?signature=${encodeURIComponent(signature)}`,
+      method: 'POST'
+    });
+  },
+
+  /**
+   * 更新用户头像
+   * @param {string} avatar - 新的头像URL
+   * @returns {Promise}
+   */
+  updateAvatar(avatar) {
+    return request({
+      url: '/user/user/modifyAvatar',
+      method: 'POST',
+      data: { avatar }
+    });
+  },
+  
   /**
    * 上传用户头像
    * @param {string} filePath - 图片文件路径
@@ -241,25 +333,36 @@ export const userApi = {
       // 构建请求头
       const headers = {};
       if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers.Token = `${token}`;
       }
       
       // 使用uni.uploadFile上传文件
       uni.uploadFile({
-        url: FULL_BASE_URL + '/user/avatar',
+        url: FULL_BASE_URL + '/user/user/uploadAvatar',
         filePath: filePath,
-        name: 'avatar',
+        name: 'file',
         header: headers,
         success: (response) => {
           try {
+            // 检查HTTP状态码
+            if (response.statusCode !== 200) {
+              reject(new Error(`上传失败: HTTP ${response.statusCode}`));
+              return;
+            }
+            
+            // 解析响应数据
             const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
-            if (response.statusCode === 200) {
+            
+            // 检查业务状态码
+            if (data.code === 200) {
               resolve(data);
             } else {
-              reject(new Error(`上传失败: ${response.statusCode} - ${data?.message || '未知错误'}`));
+              reject(new Error(data.message || '上传失败'));
             }
           } catch (error) {
-            reject(new Error('解析响应数据失败'));
+            console.error('JSON解析错误:', error);
+            console.error('原始响应数据:', response.data);
+            reject(new Error('服务器响应格式错误，请稍后重试'));
           }
         },
         fail: (error) => {
@@ -267,6 +370,17 @@ export const userApi = {
           reject(error);
         }
       });
+    });
+  },
+
+  /**
+   * 获取用户头像
+   * @returns {Promise}
+   */
+  getAvatar() {
+    return request({
+      url: '/user/user/getAvatar',
+      method: 'GET'
     });
   },
 
@@ -574,6 +688,17 @@ export const userApi = {
    */
   getLocalUserInfo() {
     return uni.getStorageSync('userInfo') || null;
+  },
+
+  /**
+   * 获取用户签名
+   * @returns {Promise}
+   */
+  getSignature() {
+    return request({
+      url: '/user/user/getSignature',
+      method: 'GET'
+    });
   },
 
   /**

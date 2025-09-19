@@ -56,20 +56,21 @@ const request = (options) => {
   });
 };
 const DEFAULT_USER_INFO = {
-  nickname: "未设置昵称",
-  account: "",
+  nickname: "淬月",
+  username: "",
   avatar: "/static/avator.png",
-  gender: "unknown",
+  sex: "unknown",
   birthday: "",
   phone: "",
   email: "",
-  bio: "这个人很懒，什么都没写~",
-  level: 1,
-  points: 0,
-  vipLevel: 0,
-  isVip: false,
-  registerTime: "",
-  lastLoginTime: "",
+  signature: "",
+  realName: "",
+  age: "",
+  name: "",
+  idCartNumber: "",
+  idCartType: "",
+  userType: "",
+  createTime: null,
   status: "active"
 };
 const validateAndSetDefaults = (userData) => {
@@ -80,6 +81,7 @@ const validateAndSetDefaults = (userData) => {
         validatedData[key] = userData[key];
       }
     });
+    console.log(validatedData);
   }
   return validatedData;
 };
@@ -122,9 +124,23 @@ const userApi = {
     return request({
       url,
       method: "GET"
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.code === 200 && result.data) {
         result.data = validateAndSetDefaults(result.data);
+        try {
+          const [signatureResult, avatarResult] = await Promise.all([
+            this.getSignature(),
+            this.getAvatar()
+          ]);
+          if (signatureResult.code === 200 && signatureResult.data) {
+            result.data.signature = signatureResult.data;
+          }
+          if (avatarResult.code === 200 && avatarResult.data) {
+            result.data.avatar = avatarResult.data;
+          }
+        } catch (error) {
+          console.log("获取用户签名或头像失败:", error);
+        }
       }
       return result;
     });
@@ -132,29 +148,85 @@ const userApi = {
   /**
    * 更新用户信息
    * @param {Object} userData - 用户信息数据
+   * @param {string} userData.username - 用户名
    * @param {string} userData.nickname - 昵称
-   * @param {string} userData.gender - 性别
+   * @param {string} userData.sex - 性别
    * @param {string} userData.birthday - 生日
    * @param {string} userData.phone - 手机号
    * @param {string} userData.email - 邮箱
-   * @param {string} userData.bio - 个人简介
+   * @param {string} userData.signature - 个人签名
+   * @param {string} userData.avatar - 头像
    * @returns {Promise}
    */
   updateUserInfo(userData) {
-    const validatedData = {};
-    const allowedFields = ["nickname", "gender", "birthday", "phone", "email", "bio"];
-    allowedFields.forEach((field) => {
-      if (userData[field] !== void 0 && userData[field] !== null && userData[field] !== "") {
-        validatedData[field] = userData[field];
+    return new Promise(async (resolve, reject) => {
+      try {
+        const promises = [];
+        if (userData.signature !== void 0 && userData.signature !== null && userData.signature !== "") {
+          promises.push(this.updateSignature(userData.signature));
+        }
+        if (userData.avatar !== void 0 && userData.avatar !== null && userData.avatar !== "") {
+          promises.push(this.updateAvatar(userData.avatar));
+        }
+        const otherFields = ["username", "nickname", "sex", "birthday", "phone", "email", "realName", "age", "name", "idCartNumber", "idCartType", "userType"];
+        const otherData = {};
+        otherFields.forEach((field) => {
+          if (userData[field] !== void 0 && userData[field] !== null && userData[field] !== "") {
+            otherData[field] = userData[field];
+          }
+        });
+        if (Object.keys(otherData).length > 0) {
+          promises.push(request({
+            url: "/user/user/modifyUserInfo",
+            method: "POST",
+            data: otherData
+          }));
+        }
+        if (promises.length === 0) {
+          return reject(new Error("没有有效的用户信息需要更新"));
+        }
+        const results = await Promise.all(promises);
+        const allSuccess = results.every((result) => result && result.code === 200);
+        if (allSuccess) {
+          resolve({
+            code: 200,
+            message: "更新成功",
+            data: results
+          });
+        } else {
+          const failedResult = results.find((result) => !result || result.code !== 200);
+          resolve({
+            code: failedResult ? failedResult.code : 500,
+            message: failedResult ? failedResult.message : "部分更新失败",
+            data: results
+          });
+        }
+      } catch (error) {
+        reject(error);
       }
     });
-    if (Object.keys(validatedData).length === 0) {
-      return Promise.reject(new Error("没有有效的用户信息需要更新"));
-    }
+  },
+  /**
+   * 更新用户签名
+   * @param {string} signature - 新的签名
+   * @returns {Promise}
+   */
+  updateSignature(signature) {
     return request({
-      url: "/user/update",
-      method: "PUT",
-      data: validatedData
+      url: `/user/user/modifySignature?signature=${encodeURIComponent(signature)}`,
+      method: "POST"
+    });
+  },
+  /**
+   * 更新用户头像
+   * @param {string} avatar - 新的头像URL
+   * @returns {Promise}
+   */
+  updateAvatar(avatar) {
+    return request({
+      url: "/user/user/modifyAvatar",
+      method: "POST",
+      data: { avatar }
     });
   },
   /**
@@ -167,23 +239,29 @@ const userApi = {
       const token = common_vendor.index.getStorageSync("token") || "";
       const headers = {};
       if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers.Token = `${token}`;
       }
       common_vendor.index.uploadFile({
-        url: FULL_BASE_URL + "/user/avatar",
+        url: FULL_BASE_URL + "/user/user/uploadAvatar",
         filePath,
-        name: "avatar",
+        name: "file",
         header: headers,
         success: (response) => {
           try {
+            if (response.statusCode !== 200) {
+              reject(new Error(`上传失败: HTTP ${response.statusCode}`));
+              return;
+            }
             const data = typeof response.data === "string" ? JSON.parse(response.data) : response.data;
-            if (response.statusCode === 200) {
+            if (data.code === 200) {
               resolve(data);
             } else {
-              reject(new Error(`上传失败: ${response.statusCode} - ${(data == null ? void 0 : data.message) || "未知错误"}`));
+              reject(new Error(data.message || "上传失败"));
             }
           } catch (error) {
-            reject(new Error("解析响应数据失败"));
+            console.error("JSON解析错误:", error);
+            console.error("原始响应数据:", response.data);
+            reject(new Error("服务器响应格式错误，请稍后重试"));
           }
         },
         fail: (error) => {
@@ -191,6 +269,16 @@ const userApi = {
           reject(error);
         }
       });
+    });
+  },
+  /**
+   * 获取用户头像
+   * @returns {Promise}
+   */
+  getAvatar() {
+    return request({
+      url: "/user/user/getAvatar",
+      method: "GET"
     });
   },
   /**
@@ -465,6 +553,16 @@ const userApi = {
    */
   getLocalUserInfo() {
     return common_vendor.index.getStorageSync("userInfo") || null;
+  },
+  /**
+   * 获取用户签名
+   * @returns {Promise}
+   */
+  getSignature() {
+    return request({
+      url: "/user/user/getSignature",
+      method: "GET"
+    });
   },
   /**
    * 保存用户登录信息到本地存储

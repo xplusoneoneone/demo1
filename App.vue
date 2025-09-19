@@ -38,20 +38,36 @@ export default {
 		/**
 		 * 初始化用户登录状态
 		 */
-		initUserLoginStatus() {
+		async initUserLoginStatus() {
 			try {
 				// 从本地存储获取用户信息
 				const userInfo = userApi.getLocalUserInfo()
 				const token = uni.getStorageSync('token')
 				const isLogin = uni.getStorageSync('isLogin')
 				
-				if (userInfo && token && isLogin) {
+				if (token && isLogin) {
 					// 设置全局数据
-					this.globalData.userInfo = userInfo
 					this.globalData.token = token
 					this.globalData.isLogin = true
 					
-					console.log('用户已登录:', userInfo)
+					if (userInfo) {
+						// 如果有本地用户信息，使用本地信息
+						this.globalData.userInfo = userInfo
+					} else {
+						// 如果没有本地用户信息，尝试从服务器获取
+						try {
+							const result = await userApi.getUserInfo()
+							if (result.code === 200 && result.data) {
+								this.globalData.userInfo = result.data
+								// 更新本地存储
+								uni.setStorageSync('userInfo', result.data)
+							}
+						} catch (error) {
+							console.warn('获取用户信息失败，使用默认信息:', error)
+							// 如果获取失败，清除登录状态
+							this.clearLoginData()
+						}
+					}
 				} else {
 					// 清除可能存在的过期数据
 					this.clearLoginData()
@@ -93,6 +109,26 @@ export default {
 			this.globalData.token = token
 			this.globalData.userInfo = userInfo
 			this.globalData.isLogin = true
+		},
+		
+		/**
+		 * 刷新用户信息
+		 * @returns {Promise<Object>} 用户信息
+		 */
+		async refreshUserInfo() {
+			try {
+				const result = await userApi.getUserInfo()
+				if (result.code === 200 && result.data) {
+					this.globalData.userInfo = result.data
+					uni.setStorageSync('userInfo', result.data)
+					return result.data
+				} else {
+					throw new Error(result.message || '获取用户信息失败')
+				}
+			} catch (error) {
+				console.error('刷新用户信息失败:', error)
+				throw error
+			}
 		},
 		
 		/**

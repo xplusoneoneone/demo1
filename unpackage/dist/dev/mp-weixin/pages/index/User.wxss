@@ -22,18 +22,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
   -webkit-backdrop-filter: blur(10rpx);
           backdrop-filter: blur(10rpx);
   transition: all 0.3s ease;
   z-index: 10;
 }
 .logout-button.data-v-cdbfb462:active {
+  background-color: rgba(255, 255, 255, 0.2);
   transform: scale(0.9);
-  background-color: rgba(255, 255, 255, 0.3);
 }
 .logout-icon.data-v-cdbfb462 {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
+  color: white;
+}
+
+/* 编辑个人信息按钮 */
+.edit-button.data-v-cdbfb462 {
+  position: absolute;
+  top: 55%;
+  right: 40rpx;
+  transform: translateY(-50%);
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+.edit-button.data-v-cdbfb462:active {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(0.9);
+}
+.arrow-icon.data-v-cdbfb462 {
+  width: 15px;
+  height: 15px;
   color: white;
 }
 .user-info.data-v-cdbfb462 {

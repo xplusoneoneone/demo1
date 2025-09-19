@@ -88,7 +88,7 @@ const _sfc_main = {
         });
         const result = await api_user.userApi.sendEmailCode(this.email);
         common_vendor.index.hideLoading();
-        if (result.code === 1) {
+        if (result.code === 200) {
           common_vendor.index.showToast({
             title: "验证码已发送",
             icon: "success"
@@ -163,10 +163,28 @@ const _sfc_main = {
       this.loading = true;
       try {
         const result = await api_user.userApi.loginByEmailCode(this.email, this.code);
-        if (result.code === 1 && result.data) {
-          const { token, userInfo } = result.data;
-          api_user.userApi.saveLoginInfo(token, userInfo);
-          getApp().setUserLoginInfo(token, userInfo);
+        if (result.code === 200 && result.data) {
+          const { token } = result.data;
+          common_vendor.index.setStorageSync("token", token);
+          try {
+            const userInfoResult = await api_user.userApi.getUserInfo();
+            if (userInfoResult.code === 200 && userInfoResult.data) {
+              const userInfo = userInfoResult.data;
+              api_user.userApi.saveLoginInfo(token, userInfo);
+              getApp().setUserLoginInfo(token, userInfo);
+              console.log("登录成功，用户信息:", userInfo);
+            } else {
+              throw new Error(userInfoResult.message || "获取用户信息失败");
+            }
+          } catch (userInfoError) {
+            console.error("获取用户信息失败:", userInfoError);
+            api_user.userApi.saveLoginInfo(token, null);
+            getApp().setUserLoginInfo(token, null);
+            common_vendor.index.showToast({
+              title: "登录成功，但获取用户信息失败",
+              icon: "none"
+            });
+          }
           common_vendor.index.showToast({
             title: "登录成功",
             icon: "success"
@@ -255,7 +273,7 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_assets._imports_0$1,
+    a: common_assets._imports_0$2,
     b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
     c: common_vendor.o([($event) => $data.email = $event.detail.value, (...args) => $options.onEmailInput && $options.onEmailInput(...args)]),
     d: common_vendor.o((...args) => $options.validateEmail && $options.validateEmail(...args)),

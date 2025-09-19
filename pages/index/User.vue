@@ -2,7 +2,7 @@
  * @Author: 徐佳德 1404577549@qq.com
  * @Date: 2025-07-06 18:18:32
  * @LastEditors: 徐佳德 1404577549@qq.com
- * @LastEditTime: 2025-09-13 14:09:46
+ * @LastEditTime: 2025-09-19 09:13:23
  * @FilePath: \demo1\pages\index\User.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -27,11 +27,20 @@
         />
       </view>
       
+      <!-- 编辑个人信息按钮 - 仅在登录时显示 -->
+      <view class="edit-button" v-if="isLogin" @click="goToEditProfile">
+      <image
+      class="arrow-icon"
+        src="/static/arrow-right.png"
+        mode="scaleToFill"
+      />
+      </view>
+      
       <view class="user-info">
         <image class="user-avatar" :src="userInfo.avatar" mode="aspectFill" @click="changeAvatar"></image>
         <view class="user-details">
           <text class="user-nickname">{{userInfo.nickname}}</text>
-          <text class="user-account">{{userInfo.account}}</text>
+          <text class="user-account">{{userInfo.signature && userInfo.signature.length > 15 ? userInfo.signature.substring(0, 15) + '...' : userInfo.signature}}</text>
           <view class="user-completeness" v-if="userInfoCompleteness < 100 && isLogin">
             <text class="completeness-text">信息完整度: {{userInfoCompleteness}}%</text>
             <view class="completeness-bar">
@@ -97,7 +106,7 @@ export default {
     return {
       userInfo: {
         nickname: '张三',
-        account: 'zhangsan123',
+        username: 'zhangsan123',
         avatar: '/static/avator.png'
       },
       loading: false,
@@ -109,18 +118,25 @@ export default {
   computed: {},
   methods: {
     // 检查登录状态并加载数据
-    checkLoginAndLoadData() {
+    async checkLoginAndLoadData() {
       const app = getApp();
       this.isLogin = app.globalData.isLogin;
       
       if (app.globalData.isLogin) {
-        // 已登录，获取用户信息
-        this.getUserInfo();
+        // 已登录，检查是否有用户信息
+        if (app.globalData.userInfo) {
+          // 使用全局用户信息
+          this.userInfo = { ...this.userInfo, ...app.globalData.userInfo };
+          this.checkUserInfoCompleteness();
+        } else {
+          // 全局没有用户信息，尝试获取
+          await this.getUserInfo();
+        }
       } else {
         // 未登录，显示默认信息
         this.userInfo = {
           nickname: '点击登录',
-          account: '未登录',
+          username: '未登录',
           avatar: '/static/default-avatar.png',
           level: 0,
           points: 0,
@@ -184,7 +200,7 @@ export default {
               this.isLogin = false;
               this.userInfo = {
                 nickname: '点击登录',
-                account: '未登录',
+                username: '未登录',
                 avatar: '/static/default-avatar.png',
                 level: 0,
                 points: 0,
@@ -225,14 +241,29 @@ export default {
       try {
         this.loading = true;
         const result = await userApi.getUserInfo();
-        if (result.code === 200) {
+        
+        if (result.code === 200 && result.data) {
+          // 更新页面用户信息
           this.userInfo = { ...this.userInfo, ...result.data };
+          
+          // 更新全局用户信息
+          const app = getApp();
+          if (app && app.globalData) {
+            app.globalData.userInfo = result.data;
+          }
+          
+          // 更新本地存储
+          uni.setStorageSync('userInfo', result.data);
           
           // 检查用户信息完整性
           this.checkUserInfoCompleteness();
           
           // 验证用户信息
           this.validateUserInfo();
+          
+          console.log('用户信息获取成功:', result.data);
+        } else {
+          throw new Error(result.message || '获取用户信息失败');
         }
       } catch (error) {
         console.error('获取用户信息失败:', error);
@@ -296,8 +327,22 @@ export default {
             const result = await userApi.uploadAvatar(tempFilePath);
             
             if (result.code === 200) {
-              // 更新头像
-              this.userInfo.avatar = result.data.avatarUrl;
+              // 上传成功后，重新获取用户头像信息
+              try {
+                const avatarResult = await userApi.getAvatar();
+                if (avatarResult.code === 200) {
+                  // 更新头像信息到userInfo
+                  this.userInfo.avatar = avatarResult.data;
+                  // 同时更新本地存储的用户信息
+                  const storedUserInfo = uni.getStorageSync('userInfo') || {};
+                  storedUserInfo.avatar = avatarResult.data;
+                  uni.setStorageSync('userInfo', storedUserInfo);
+                }
+              } catch (avatarError) {
+                console.error('获取头像信息失败:', avatarError);
+                // 如果获取头像失败，仍然使用上传返回的头像URL
+                this.userInfo.avatar = result.data.avatarUrl || result.data;
+              }
               
               // 显示成功提示
               uni.showToast({
@@ -321,6 +366,26 @@ export default {
           console.log('选择图片失败', err);
           uni.showToast({
             title: '选择图片失败',
+            icon: 'none'
+          });
+        }
+      });
+    },
+    
+    // 跳转到个人信息编辑页面
+    goToEditProfile() {
+      // 检查登录状态
+      if (!this.isLogin) {
+        this.goToLogin();
+        return;
+      }
+      
+      uni.navigateTo({
+        url: '/pages/index/EditProfile',
+        fail: (error) => {
+          console.error('跳转编辑页面失败:', error);
+          uni.showToast({
+            title: '跳转失败',
             icon: 'none'
           });
         }
@@ -438,21 +503,52 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
   backdrop-filter: blur(10rpx);
   transition: all 0.3s ease;
   z-index: 10;
 }
 
 .logout-button:active {
+  background-color: rgba(255, 255, 255, 0.2);
   transform: scale(0.9);
-  background-color: rgba(255, 255, 255, 0.3);
 }
 
+
 .logout-icon {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   color: white;
 }
+
+/* 编辑个人信息按钮 */
+.edit-button {
+  position: absolute;
+  top: 55%;
+  right: 40rpx;
+  transform: translateY(-50%);
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.edit-button:active {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(0.9);
+}
+
+
+.arrow-icon {
+  width: 15px;
+  height: 15px;
+  color: white;
+}
+
 
 .user-info {
   display: flex;

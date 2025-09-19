@@ -2,7 +2,7 @@
  * @Author: 徐佳德 1404577549@qq.com
  * @Date: 2025-09-13 11:40:56
  * @LastEditors: 徐佳德 1404577549@qq.com
- * @LastEditTime: 2025-09-13 14:30:12
+ * @LastEditTime: 2025-09-17 10:41:31
  * @FilePath: \demo1\pages\login\EmailLogin.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -204,7 +204,7 @@ export default {
         
         uni.hideLoading()
         
-        if (result.code === 1) {
+        if (result.code === 200) {
           uni.showToast({
             title: '验证码已发送',
             icon: 'success'
@@ -293,13 +293,42 @@ export default {
       try {
         const result = await userApi.loginByEmailCode(this.email, this.code)
         
-        if (result.code === 1 && result.data) {
+        if (result.code === 200 && result.data) {
           // 保存登录信息
-          const { token, userInfo } = result.data
-          userApi.saveLoginInfo(token, userInfo)
+          const { token } = result.data
           
-          // 更新全局登录状态
-          getApp().setUserLoginInfo(token, userInfo)
+          // 先保存token，然后获取用户信息
+          uni.setStorageSync('token', token)
+          
+          try {
+            // 获取用户信息
+            const userInfoResult = await userApi.getUserInfo()
+            
+            if (userInfoResult.code === 200 && userInfoResult.data) {
+              const userInfo = userInfoResult.data
+              
+              // 保存完整的登录信息
+              userApi.saveLoginInfo(token, userInfo)
+              
+              // 更新全局登录状态
+              getApp().setUserLoginInfo(token, userInfo)
+              
+              console.log('登录成功，用户信息:', userInfo)
+            } else {
+              throw new Error(userInfoResult.message || '获取用户信息失败')
+            }
+          } catch (userInfoError) {
+            console.error('获取用户信息失败:', userInfoError)
+            
+            // 即使获取用户信息失败，也要保存token，用户可以稍后手动刷新
+            userApi.saveLoginInfo(token, null)
+            getApp().setUserLoginInfo(token, null)
+            
+            uni.showToast({
+              title: '登录成功，但获取用户信息失败',
+              icon: 'none'
+            })
+          }
           
           uni.showToast({
             title: '登录成功',

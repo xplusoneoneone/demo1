@@ -8,7 +8,7 @@ const _sfc_main = {
     return {
       userInfo: {
         nickname: "张三",
-        account: "zhangsan123",
+        username: "zhangsan123",
         avatar: "/static/avator.png"
       },
       loading: false,
@@ -23,15 +23,20 @@ const _sfc_main = {
   computed: {},
   methods: {
     // 检查登录状态并加载数据
-    checkLoginAndLoadData() {
+    async checkLoginAndLoadData() {
       const app = getApp();
       this.isLogin = app.globalData.isLogin;
       if (app.globalData.isLogin) {
-        this.getUserInfo();
+        if (app.globalData.userInfo) {
+          this.userInfo = { ...this.userInfo, ...app.globalData.userInfo };
+          this.checkUserInfoCompleteness();
+        } else {
+          await this.getUserInfo();
+        }
       } else {
         this.userInfo = {
           nickname: "点击登录",
-          account: "未登录",
+          username: "未登录",
           avatar: "/static/default-avatar.png",
           level: 0,
           points: 0,
@@ -82,7 +87,7 @@ const _sfc_main = {
               this.isLogin = false;
               this.userInfo = {
                 nickname: "点击登录",
-                account: "未登录",
+                username: "未登录",
                 avatar: "/static/default-avatar.png",
                 level: 0,
                 points: 0,
@@ -116,10 +121,18 @@ const _sfc_main = {
       try {
         this.loading = true;
         const result = await api_user.userApi.getUserInfo();
-        if (result.code === 200) {
+        if (result.code === 200 && result.data) {
           this.userInfo = { ...this.userInfo, ...result.data };
+          const app = getApp();
+          if (app && app.globalData) {
+            app.globalData.userInfo = result.data;
+          }
+          common_vendor.index.setStorageSync("userInfo", result.data);
           this.checkUserInfoCompleteness();
           this.validateUserInfo();
+          console.log("用户信息获取成功:", result.data);
+        } else {
+          throw new Error(result.message || "获取用户信息失败");
         }
       } catch (error) {
         console.error("获取用户信息失败:", error);
@@ -170,7 +183,18 @@ const _sfc_main = {
             });
             const result = await api_user.userApi.uploadAvatar(tempFilePath);
             if (result.code === 200) {
-              this.userInfo.avatar = result.data.avatarUrl;
+              try {
+                const avatarResult = await api_user.userApi.getAvatar();
+                if (avatarResult.code === 200) {
+                  this.userInfo.avatar = avatarResult.data;
+                  const storedUserInfo = common_vendor.index.getStorageSync("userInfo") || {};
+                  storedUserInfo.avatar = avatarResult.data;
+                  common_vendor.index.setStorageSync("userInfo", storedUserInfo);
+                }
+              } catch (avatarError) {
+                console.error("获取头像信息失败:", avatarError);
+                this.userInfo.avatar = result.data.avatarUrl || result.data;
+              }
               common_vendor.index.showToast({
                 title: "头像更换成功",
                 icon: "success"
@@ -192,6 +216,23 @@ const _sfc_main = {
           console.log("选择图片失败", err);
           common_vendor.index.showToast({
             title: "选择图片失败",
+            icon: "none"
+          });
+        }
+      });
+    },
+    // 跳转到个人信息编辑页面
+    goToEditProfile() {
+      if (!this.isLogin) {
+        this.goToLogin();
+        return;
+      }
+      common_vendor.index.navigateTo({
+        url: "/pages/index/EditProfile",
+        fail: (error) => {
+          console.error("跳转编辑页面失败:", error);
+          common_vendor.index.showToast({
+            title: "跳转失败",
             icon: "none"
           });
         }
@@ -285,25 +326,30 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     b: common_assets._imports_0,
     c: common_vendor.o((...args) => $options.logout && $options.logout(...args))
   } : {}, {
-    d: $data.userInfo.avatar,
-    e: common_vendor.o((...args) => $options.changeAvatar && $options.changeAvatar(...args)),
-    f: common_vendor.t($data.userInfo.nickname),
-    g: common_vendor.t($data.userInfo.account),
-    h: $data.userInfoCompleteness < 100 && $data.isLogin
-  }, $data.userInfoCompleteness < 100 && $data.isLogin ? {
-    i: common_vendor.t($data.userInfoCompleteness),
-    j: $data.userInfoCompleteness + "%"
-  } : {}, {
-    k: $data.isLogin
+    d: $data.isLogin
   }, $data.isLogin ? {
-    l: common_vendor.o(($event) => $options.goToPage("favorites")),
-    m: common_vendor.o(($event) => $options.goToPage("history")),
-    n: common_vendor.o(($event) => $options.goToPage("settings")),
-    o: common_vendor.o(($event) => $options.goToPage("page"))
+    e: common_assets._imports_1,
+    f: common_vendor.o((...args) => $options.goToEditProfile && $options.goToEditProfile(...args))
   } : {}, {
-    p: !$data.isLogin
+    g: $data.userInfo.avatar,
+    h: common_vendor.o((...args) => $options.changeAvatar && $options.changeAvatar(...args)),
+    i: common_vendor.t($data.userInfo.nickname),
+    j: common_vendor.t($data.userInfo.signature && $data.userInfo.signature.length > 15 ? $data.userInfo.signature.substring(0, 15) + "..." : $data.userInfo.signature),
+    k: $data.userInfoCompleteness < 100 && $data.isLogin
+  }, $data.userInfoCompleteness < 100 && $data.isLogin ? {
+    l: common_vendor.t($data.userInfoCompleteness),
+    m: $data.userInfoCompleteness + "%"
+  } : {}, {
+    n: $data.isLogin
+  }, $data.isLogin ? {
+    o: common_vendor.o(($event) => $options.goToPage("favorites")),
+    p: common_vendor.o(($event) => $options.goToPage("history")),
+    q: common_vendor.o(($event) => $options.goToPage("settings")),
+    r: common_vendor.o(($event) => $options.goToPage("page"))
+  } : {}, {
+    s: !$data.isLogin
   }, !$data.isLogin ? {
-    q: common_vendor.o((...args) => $options.goToLogin && $options.goToLogin(...args))
+    t: common_vendor.o((...args) => $options.goToLogin && $options.goToLogin(...args))
   } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-cdbfb462"]]);

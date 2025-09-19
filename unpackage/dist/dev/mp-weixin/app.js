@@ -7,6 +7,7 @@ if (!Math) {
   "./pages/index/Page1.js";
   "./pages/index/Page2.js";
   "./pages/index/User.js";
+  "./pages/index/EditProfile.js";
   "./pages/login/EmailLogin.js";
   "./pages/ai-chat/ai-chat.js";
 }
@@ -35,16 +36,28 @@ const _sfc_main = {
     /**
      * 初始化用户登录状态
      */
-    initUserLoginStatus() {
+    async initUserLoginStatus() {
       try {
         const userInfo = api_user.userApi.getLocalUserInfo();
         const token = common_vendor.index.getStorageSync("token");
         const isLogin = common_vendor.index.getStorageSync("isLogin");
-        if (userInfo && token && isLogin) {
-          this.globalData.userInfo = userInfo;
+        if (token && isLogin) {
           this.globalData.token = token;
           this.globalData.isLogin = true;
-          console.log("用户已登录:", userInfo);
+          if (userInfo) {
+            this.globalData.userInfo = userInfo;
+          } else {
+            try {
+              const result = await api_user.userApi.getUserInfo();
+              if (result.code === 200 && result.data) {
+                this.globalData.userInfo = result.data;
+                common_vendor.index.setStorageSync("userInfo", result.data);
+              }
+            } catch (error) {
+              console.warn("获取用户信息失败，使用默认信息:", error);
+              this.clearLoginData();
+            }
+          }
         } else {
           this.clearLoginData();
         }
@@ -80,6 +93,25 @@ const _sfc_main = {
       this.globalData.token = token;
       this.globalData.userInfo = userInfo;
       this.globalData.isLogin = true;
+    },
+    /**
+     * 刷新用户信息
+     * @returns {Promise<Object>} 用户信息
+     */
+    async refreshUserInfo() {
+      try {
+        const result = await api_user.userApi.getUserInfo();
+        if (result.code === 200 && result.data) {
+          this.globalData.userInfo = result.data;
+          common_vendor.index.setStorageSync("userInfo", result.data);
+          return result.data;
+        } else {
+          throw new Error(result.message || "获取用户信息失败");
+        }
+      } catch (error) {
+        console.error("刷新用户信息失败:", error);
+        throw error;
+      }
     },
     /**
      * 用户登出

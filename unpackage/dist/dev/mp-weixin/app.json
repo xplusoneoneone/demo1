@@ -4,6 +4,7 @@
     "pages/index/Page1",
     "pages/index/Page2",
     "pages/index/User",
+    "pages/index/EditProfile",
     "pages/login/EmailLogin",
     "pages/ai-chat/ai-chat"
   ],
